@@ -1,0 +1,13 @@
+Info,  T0: Load ../../test/models-nonbsd/X/dwarf.x
+Info,  T0: Found a matching importer for this file format
+Info,  T0: Import root directory is '../../test/models-nonbsd/X/'
+Info,  T0: Entering post processing pipeline
+Info,  T0: Points: 0, Lines: 0, Triangles: 2, Polygons: 0 (Meshes, X = removed)
+Warn,  T0: Simplified dummy tracks with just one key
+Skipping one or more lines with the same contents
+Info,  T0: CalcTangentsProcess finished. Tangents have been calculated
+Info,  T0: JoinVerticesProcess finished | Verts in: 5688 out: 2001 | ~64.8%
+Info,  T0: Removed 1 bones. Input bones: 1. Output bones: 0
+Info,  T0: Removed 2 bones. Input bones: 39. Output bones: 37
+Info,  T0: Cache relevant are 4 meshes (1896 faces). Average output ACMR is 1.142405
+Info,  T0: Leaving post processing pipeline
