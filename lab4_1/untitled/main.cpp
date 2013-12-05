@@ -10,7 +10,7 @@
 #include "utils.h"
 
 sf::Texture texture;
-Vector lightPos(0.0, 1.0, -1.0), lightAxis(1.0, 0.0, 0.0);
+Vector lightPos(0.0, 1.0, -1.0), lightPos2(0.0, 1.0, 1.0), lightAxis(1.0, 0.0, 0.0), lightAxis2(-1.0, 0.0, 0.0);
 const float lightRotationSpeed = 3.0;
 
 void initialize()
@@ -18,6 +18,7 @@ void initialize()
     GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
     GLfloat mat_shininess[] = { 10.0 };
     GLfloat white_light[] = { 1.0, 1.0, 1.0, 1.0 };
+    GLfloat grey_light[] = { 0.6, 0.6, 0.6, 1.0 };
 
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glShadeModel(GL_SMOOTH);
@@ -28,8 +29,21 @@ void initialize()
     glLightfv(GL_LIGHT0, GL_DIFFUSE, white_light);
     glLightfv(GL_LIGHT0, GL_SPECULAR, white_light);
 
+    GLfloat blue_light[] = { 0.0, 0.0, 1.0, 1.0 };
+
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, blue_light);
+    glLightfv(GL_LIGHT1, GL_SPECULAR, blue_light);
+
+    glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, 60.0);
+    glLightf(GL_LIGHT1, GL_SPOT_EXPONENT, 3.3);
+
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, grey_light);
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+    glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
+
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHT1);
     glEnable(GL_DEPTH_TEST);
 
     glEnable(GL_CULL_FACE);
@@ -55,9 +69,6 @@ void render()
     gluLookAt(0.0, 0.0, -3.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
     glPushMatrix();
-        GLfloat lightPosition[] = { lightPos.x, lightPos.y, lightPos.z, 1.0 };
-        glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-
         sf::Texture::bind(&texture);
 
         GLUquadric *qobj = gluNewQuadric();
@@ -67,29 +78,37 @@ void render()
 
         gluDeleteQuadric(qobj);
         sf::Texture::bind(0);
-
     glPopMatrix();
 
     glPushMatrix();
+        GLfloat lightPosition[] = { lightPos.x, lightPos.y, lightPos.z, 1.0 };
+        glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 
         glTranslatef(lightPos.x, lightPos.y, lightPos.z);
 
         qobj = gluNewQuadric();
 
+        glColor3f(0.0, 0.0, 1.0);
         gluSphere(qobj, 0.1, 50, 50);
 
         gluDeleteQuadric(qobj);
-
     glPopMatrix();
 
     glPushMatrix();
+        GLfloat lightPosition2[] = { lightPos2.x, lightPos2.y, lightPos2.z, 1.0 };
+        GLfloat lightDirection2[] = { -lightPos2.x, -lightPos2.y, -lightPos2.z, 1.0 };
 
-        glColor3f(1, 1, 1);
-        glBegin(GL_LINES);
-            glVertex3d(0, 0, 0);
-            glVertex3d(lightPos.x, lightPos.y, lightPos.z);
-        glEnd();
+        glLightfv(GL_LIGHT1, GL_POSITION, lightPosition2);
+        glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, lightDirection2);
 
+        glTranslatef(lightPos2.x, lightPos2.y, lightPos2.z);
+
+        qobj = gluNewQuadric();
+
+        glColor3f(0.0, 0.0, 1.0);
+        gluSphere(qobj, 0.1, 50, 50);
+
+        gluDeleteQuadric(qobj);
     glPopMatrix();
 }
 
@@ -112,22 +131,26 @@ void handleLightControls()
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
     {
         lightPos = lightPos.Rotate(lightAxis, Radians(lightRotationSpeed));
+        lightPos2 = lightPos2.Rotate(lightAxis2, Radians(lightRotationSpeed));
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
     {
         lightPos = lightPos.Rotate(lightAxis, Radians(-lightRotationSpeed));
+        lightPos2 = lightPos2.Rotate(lightAxis2, Radians(-lightRotationSpeed));
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
     {
         lightPos = lightPos.Rotate(lightUp, Radians(lightRotationSpeed));
+        lightPos2 = lightPos2.Rotate(lightUp, Radians(lightRotationSpeed));
         lightAxis = lightAxis.Rotate(lightUp, Radians(lightRotationSpeed));
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
     {
         lightPos = lightPos.Rotate(lightUp, Radians(-lightRotationSpeed));
+        lightPos2 = lightPos2.Rotate(lightUp, Radians(-lightRotationSpeed));
         lightAxis = lightAxis.Rotate(lightUp, Radians(-lightRotationSpeed));
     }
 }
