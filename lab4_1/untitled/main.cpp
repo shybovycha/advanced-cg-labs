@@ -3,6 +3,7 @@
 #include <GL/glu.h>
 #include <GL/gl.h>
 
+#include <SFML/System.hpp>
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
@@ -16,7 +17,6 @@ void initialize()
 {
     GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
     GLfloat mat_shininess[] = { 10.0 };
-    GLfloat light_position[] = { 0.0, 1.0, 1.0, 0.0 };
     GLfloat white_light[] = { 1.0, 1.0, 1.0, 1.0 };
 
     glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -25,7 +25,6 @@ void initialize()
     glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
     glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
 
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, white_light);
     glLightfv(GL_LIGHT0, GL_SPECULAR, white_light);
 
@@ -33,7 +32,7 @@ void initialize()
     glEnable(GL_LIGHT0);
     glEnable(GL_DEPTH_TEST);
 
-    glDisable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     glEnable(GL_TEXTURE_2D);
 
     if (!texture.loadFromFile("earth.jpg"))
@@ -47,22 +46,51 @@ void initialize()
 
 void render()
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    GLfloat lightPosition[] = { lightPos.x, lightPos.y, lightPos.z, 1.0 };
-    glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+    glMatrixMode(GL_MODELVIEW);
 
-    glEnable(GL_TEXTURE_2D);
-    sf::Texture::bind(&texture);
+    glLoadIdentity();
 
-    GLUquadric *qobj = gluNewQuadric();
-    gluQuadricTexture(qobj, GL_TRUE);
+    gluLookAt(0.0, 0.0, -3.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
 
-    gluSphere(qobj, 0.8, 50, 50);
+    glPushMatrix();
+        GLfloat lightPosition[] = { lightPos.x, lightPos.y, lightPos.z, 1.0 };
+        glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 
-    gluDeleteQuadric(qobj);
+        sf::Texture::bind(&texture);
 
-    glDisable(GL_TEXTURE_2D);
+        GLUquadric *qobj = gluNewQuadric();
+        gluQuadricTexture(qobj, GL_TRUE);
+
+        gluSphere(qobj, 0.8, 50, 50);
+
+        gluDeleteQuadric(qobj);
+        sf::Texture::bind(0);
+
+    glPopMatrix();
+
+    glPushMatrix();
+
+        glTranslatef(lightPos.x, lightPos.y, lightPos.z);
+
+        qobj = gluNewQuadric();
+
+        gluSphere(qobj, 0.1, 50, 50);
+
+        gluDeleteQuadric(qobj);
+
+    glPopMatrix();
+
+    glPushMatrix();
+
+        glColor3f(1, 1, 1);
+        glBegin(GL_LINES);
+            glVertex3d(0, 0, 0);
+            glVertex3d(lightPos.x, lightPos.y, lightPos.z);
+        glEnd();
+
+    glPopMatrix();
 }
 
 void windowResizeHandler(int width, int height)
@@ -71,25 +99,52 @@ void windowResizeHandler(int width, int height)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    if (width < height)
-    {
-        glOrtho(-1.5, 1.5, -0.5 * (GLfloat) height / (GLfloat) width, 0.5 * (GLfloat) height / (GLfloat) width, -10.0, 10.0);
-    } else
-    {
-        glOrtho(-1.5 * (GLfloat) width / (GLfloat) height, 1.5 * (GLfloat) width / (GLfloat) height, -1.5, 1.5, -10.0, 10.0);
-    }
+    gluPerspective(90.0f, (float) width / (float) height, 0.1f, 100.0f);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }
 
+void handleLightControls()
+{
+    const Vector lightUp(0.0, 1.0, 0.0);
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+    {
+        lightPos = lightPos.Rotate(lightAxis, Radians(lightRotationSpeed));
+    }
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+    {
+        lightPos = lightPos.Rotate(lightAxis, Radians(-lightRotationSpeed));
+    }
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+    {
+        lightPos = lightPos.Rotate(lightUp, Radians(lightRotationSpeed));
+        lightAxis = lightAxis.Rotate(lightUp, Radians(lightRotationSpeed));
+    }
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+    {
+        lightPos = lightPos.Rotate(lightUp, Radians(-lightRotationSpeed));
+        lightAxis = lightAxis.Rotate(lightUp, Radians(-lightRotationSpeed));
+    }
+}
+
 int main()
 {
-    sf::Window window(sf::VideoMode(800, 600), "OpenGL");
+    sf::ContextSettings settings;
 
-    initialize();
+    settings.depthBits = 24;
+    settings.antialiasingLevel = 16;
+    settings.stencilBits = 24;
+
+    sf::Window window(sf::VideoMode(800, 600), "OpenGL", sf::Style::Default, settings);
 
     window.setActive(true);
+
+    initialize();
 
     while (window.isOpen())
     {
@@ -104,23 +159,7 @@ int main()
                 windowResizeHandler(event.size.width, event.size.height);
             } else if (event.type == sf::Event::KeyPressed)
             {
-                const Vector lightUp(0.0, 1.0, 0.0);
-
-                if (event.key.code == sf::Keyboard::Up)
-                {
-                    lightPos = ((lightPos * -1).Rotate(lightAxis, Radians(lightRotationSpeed)) * -1);
-                } else if (event.key.code == sf::Keyboard::Down)
-                {
-                    lightPos = ((lightPos * -1).Rotate(lightAxis, Radians(-lightRotationSpeed)) * -1);
-                } else if (event.key.code == sf::Keyboard::Left)
-                {
-                    lightPos = lightPos.Rotate(lightUp, Radians(lightRotationSpeed));
-                    lightAxis = lightAxis.Rotate(lightUp, Radians(lightRotationSpeed));
-                } else if (event.key.code == sf::Keyboard::Right)
-                {
-                    lightPos = lightPos.Rotate(lightUp, Radians(-lightRotationSpeed));
-                    lightAxis = lightAxis.Rotate(lightUp, Radians(-lightRotationSpeed));
-                } else if (event.key.code == sf::Keyboard::Escape)
+                if (event.key.code == sf::Keyboard::Escape)
                 {
                     window.close();
                 }
@@ -129,6 +168,8 @@ int main()
                 window.close();
             }
         }
+
+        handleLightControls();
 
         render();
 
