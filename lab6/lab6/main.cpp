@@ -1,145 +1,102 @@
-#define GLEW_STATIC
+#include "utils.h"
 
-#include <stdio.h>
-#include <map>
+#define printOpenGLError() printOglError(__FILE__, __LINE__)
 
-#include <GL/glew.h>
-#include <GL/glu.h>
-#include <GL/gl.h>
-
-#include <SFML/System.hpp>
-#include <SFML/Window.hpp>
-#include <SFML/Graphics.hpp>
-
-class Application
+int printOglError(char *file, int line)
 {
-protected:
-    GLuint vbo, ibo, elementsNum;
-    sf::Window* window;
-    GLint uniColor;
+    GLenum glErr;
+    int    retCode = 0;
 
-    char* getShaderSource(char* filename)
+    glErr = glGetError();
+    if (glErr != GL_NO_ERROR)
     {
-        FILE *f = fopen(filename, "r");
-
-        fseek(f, 0, SEEK_END);
-        int file_size = ftell(f);
-        rewind(f);
-
-        char* data = (char*) malloc(file_size * sizeof(char));
-
-        fclose(f);
-
-        return data;
+        printf("glError in file %s @ line %d: %s\n",
+                 file, line, gluErrorString(glErr));
+        retCode = 1;
     }
+    return retCode;
+}
 
-    GLuint loadVertexShader(char* filename)
-    {
-        char* source = getShaderSource(filename);
+void printLog(GLuint obj)
+{
+    int infologLength = 0;
+    int maxLength;
 
-        GLuint shader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(shader, 1, (const GLchar**) &source, NULL);
-        glCompileShader(shader);
+    if(glIsShader(obj))
+        glGetShaderiv(obj,GL_INFO_LOG_LENGTH,&maxLength);
+    else
+        glGetProgramiv(obj,GL_INFO_LOG_LENGTH,&maxLength);
 
-        return shader;
-    }
+    char infoLog[maxLength];
 
-    GLuint loadFragmentShader(char* filename)
-    {
-        char* source = getShaderSource(filename);
+    if (glIsShader(obj))
+        glGetShaderInfoLog(obj, maxLength, &infologLength, infoLog);
+    else
+        glGetProgramInfoLog(obj, maxLength, &infologLength, infoLog);
 
-        GLuint shader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(shader, 1, (const GLchar**) &source, NULL);
-        glCompileShader(shader);
+    if (infologLength > 0)
+        printf("%s\n",infoLog);
+}
 
-        return shader;
-    }
+char* getShaderSource(char* filename)
+{
+    FILE *f = fopen(filename, "r");
 
-    /*GLuint linkShaders(GLuint vertexShader, GLuint fragmentShader)
-    {
-        GLuint program = glCreateProgram();
-        glAttachShader(program, vertexShader);
-        glAttachShader(program, fragmentShader);
+    fseek(f, 0, SEEK_END);
+    int file_size = ftell(f);
+    rewind(f);
 
-        glBindFragDataLocation(program, 0, "outColor");
+    char* data = (char*) malloc(file_size * sizeof(char));
 
-        glLinkProgram(program);
-        glUseProgram(program);
+    fread((char*) data, file_size, sizeof(char), f);
 
-        return program;
-    }*/
+    fclose(f);
 
-public:
-    Application()
-    {
-        sf::ContextSettings settings;
-        settings.antialiasingLevel = 16;
-        settings.depthBits = 24;
-        settings.stencilBits = 24;
+    return data;
+}
 
-        window = new sf::Window(sf::VideoMode(800, 600), "moofoo", sf::Style::Close, settings);
+int main()
+{
+    sf::ContextSettings settings;
+    settings.antialiasingLevel = 16;
+    settings.depthBits = 24;
+    settings.stencilBits = 24;
 
-        GLboolean glewExperimental = GL_TRUE;
+    sf::Window window(sf::VideoMode(800, 600), "moofoo", sf::Style::Close, settings);
 
-        if (glewInit() != GLEW_OK)
-        {
-            printf("Could not initialize GLEW\n");
-            return;
-        }
+    const GLchar* vertexSource = (const GLchar*) getShaderSource("../data/vertex.glsl");
+    const GLchar* fragmentSource = (const GLchar*) getShaderSource("../data/fragment.glsl");
 
-        initData();
-    }
+    // Initialize GLEW
+        glewExperimental = GL_TRUE;
+        glewInit();
 
-    void processWindowEvents()
-    {
-        sf::Event windowEvent;
+        // Create Vertex Array Object
+        GLuint vao;
+        glGenVertexArrays(1, &vao);
+        glBindVertexArray(vao);
 
-        while (window->pollEvent(windowEvent))
-        {
-            if ((windowEvent.type == sf::Event::Closed) || ((windowEvent.type == sf::Event::KeyPressed) && (windowEvent.key.code == sf::Keyboard::Escape)))
-            {
-                window->close();
-                return;
-            }
-        }
-    }
+        // Create a Vertex Buffer Object and copy the vertex data to it
+        GLuint vbo;
+        glGenBuffers(1, &vbo);
 
-    void initData()
-    {
-        float vertices[] = {
-             0.0f,  0.5f, // Vertex 1 (X, Y)
-             0.5f, -0.5f, // Vertex 2 (X, Y)
-            -0.5f, -0.5f  // Vertex 3 (X, Y)
+        GLfloat vertices[] = {
+             0.0f,  0.5f, 1.0f, 0.0f, 0.0f,
+             0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+            -0.5f, -0.5f, 0.0f, 0.0f, 1.0f
         };
 
-        glGenBuffers(1, &this->vbo); // Generate 1 buffer
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        unsigned int indices[] = {
-            0, 1, 2
-        };
-
-        this->elementsNum = sizeof(indices);
-
-        glGenBuffers(1, &this->ibo);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ibo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-        char* source = getShaderSource("../data/vertex.glsl");
 
         // Create and compile the vertex shader
         GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, (const GLchar**) &source, NULL);
+        glShaderSource(vertexShader, 1, &vertexSource, NULL);
         glCompileShader(vertexShader);
-
-        source = getShaderSource("../data/fragment.glsl");
 
         // Create and compile the fragment shader
         GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, (const GLchar**) &source, NULL);
+        glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
         glCompileShader(fragmentShader);
 
         // Link the vertex and fragment shader into a shader program
@@ -153,46 +110,41 @@ public:
         // Specify the layout of the vertex data
         GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
         glEnableVertexAttribArray(posAttrib);
-        glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
 
-        // Get the location of the color uniform
-        uniColor = glGetUniformLocation(shaderProgram, "triangleColor");
-    }
+        GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
+        glEnableVertexAttribArray(colAttrib);
+        glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
 
-    void render()
-    {
-        glUniform3f(uniColor, 0.5f, 0.0f, 0.0f);
-
-        // Clear the screen to black
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ibo);
-        // Draw a triangle from the 3 vertices
-        glDrawElements(GL_TRIANGLES, this->elementsNum, GL_UNSIGNED_INT, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
-
-    void run()
-    {
-        while (window->isOpen())
+        while (window.isOpen())
         {
-            processWindowEvents();
+            sf::Event windowEvent;
+            while (window.pollEvent(windowEvent))
+            {
+                switch (windowEvent.type)
+                {
+                case sf::Event::Closed:
+                    window.close();
+                    break;
+                }
+            }
 
-            render();
+            // Clear the screen to black
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
 
-            window->display();
+            // Draw a triangle from the 3 vertices
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+
+            // Swap buffers
+            window.display();
         }
-    }
-};
 
-int main()
-{
-    Application app;
+        glDeleteProgram(shaderProgram);
+        glDeleteShader(fragmentShader);
+        glDeleteShader(vertexShader);
 
-    app.run();
+        glDeleteBuffers(1, &vbo);
 
-    return 0;
+        glDeleteVertexArrays(1, &vao);
 }

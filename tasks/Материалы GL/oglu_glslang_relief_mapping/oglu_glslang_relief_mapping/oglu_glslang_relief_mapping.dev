@@ -1,0 +1,119 @@
+[Project]
+FileName=oglu_glslang_relief_mapping.dev
+Name=oglu_glslang_relief_mapping
+Ver=1
+IsCpp=1
+Type=0
+Compiler=-D__GNUWIN32__ -W -DWIN32 -DNDEBUG -D_WINDOWS -D_MBCS_@@_
+CppCompiler=-D__GNUWIN32__ -W -DWIN32 -DNDEBUG -D_WINDOWS -D_MBCS_@@_
+Includes=
+Linker=-lglu32 -lopengl32 -lglaux -lwinmm -lkernel32 -luser32 -lgdi32 -lwinspool -lcomdlg32 -ladvapi32 -lshell32 -lole32 -loleaut32 -luuid -lodbc32 -lodbccp32_@@_
+Libs=
+UnitCount=7
+Folders="Header Files","Resource Files","Shader Files","Source Files"
+ObjFiles=
+PrivateResource=ogl_glslang_simple_vs2ps_private.rc
+ResourceIncludes=
+MakeIncludes=
+Icon=
+ExeOutput=
+ObjectOutput=
+OverrideOutput=0
+OverrideOutputName=ogl_glslang_simple_parralax.exe
+HostApplication=
+CommandLine=
+UseCustomMakefile=0
+CustomMakefile=
+IncludeVersionInfo=0
+SupportXPThemes=0
+CompilerSet=0
+CompilerSettings=0000000000000000000000
+
+[Unit1]
+FileName=oglu_glslang_relief_mapping.cpp
+Folder="Source Files"
+Compile=1
+CompileCpp=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit2]
+FileName=glext.h
+Folder="Header Files"
+Compile=1
+CompileCpp=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit3]
+FileName=codesampler.ico
+Folder="Resource Files"
+Compile=0
+CompileCpp=0
+Link=0
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit4]
+FileName=oglu_glslang_relief_mapping.rc
+Folder="Resource Files"
+Compile=1
+CompileCpp=1
+Link=0
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit5]
+FileName=resource.h
+Folder="Resource Files"
+Compile=1
+CompileCpp=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit6]
+FileName=fragment_shader.frag
+Folder="Shader Files"
+Compile=0
+CompileCpp=0
+Link=0
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit7]
+FileName=vertex_shader.vert
+Folder="Shader Files"
+Compile=0
+CompileCpp=0
+Link=0
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[VersionInfo]
+Major=0
+Minor=1
+Release=1
+Build=1
+LanguageID=1033
+CharsetID=1252
+CompanyName=
+FileVersion=0.1
+FileDescription=Developed using the Dev-C++ IDE
+InternalName=
+LegalCopyright=
+LegalTrademarks=
+OriginalFilename=ogl_glslang_simple_vs2ps.exe
+ProductName=ogl_glslang_simple_vs2ps
+ProductVersion=0.1
+AutoIncBuildNr=0
+

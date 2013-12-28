@@ -1,0 +1,10 @@
+
+uniform float waveTime; 
+uniform float waveWidth; 
+
+void main() 
+{ 
+	vec4 v = gl_Vertex;
+	v.z = sin(v.x + v.y); 
+	gl_Position = gl_ModelViewProjectionMatrix * v;
+}

@@ -1,0 +1,670 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0033)http://pmg.org.ru/nehe/nehe47.htm -->
+<HTML><HEAD><TITLE>Урок 47. Вершинные шейдеры CG.</TITLE>
+<META content="text/html; charset=windows-1251" http-equiv=Content-Type>
+<META name=description 
+content="Переводы по OpenGL, трехмерная графика, игры, мультимедия&#13;&#10;Translations Russian OpenGL&#13;&#10;">
+<META name=keyword 
+content="Программирование,игры,3D,трехмерная графика,OpenGL,NeHe">
+<META name=keyword content=programming,C,C++,game,graphics><LINK rel=stylesheet 
+type=text/css href="Урок%2047_%20Вершинные%20шейдеры%20CG_files/pmg.css">
+<META name=GENERATOR content="MSHTML 8.00.6001.18812"></HEAD>
+<BODY link=#800080 bgColor=#b2d3e1 vLink=#800080>
+<SCRIPT language=javascript 
+src="Урок%2047_%20Вершинные%20шейдеры%20CG_files/nehe.js">
+<!--
+//-->
+</SCRIPT>
+
+<CENTER>
+<DIV id=top>
+<TABLE border=0 cellSpacing=0 cellPadding=0 width="100%">Гtr&gt; 
+  <TBODY>
+  <TR>
+    <TD vAlign=center width="20%" align=middle><IMG hspace=0 
+      alt="NeHe Tutorials" align=left 
+      src="Урок%2047_%20Вершинные%20шейдеры%20CG_files/nehelogo.jpg" width=125 
+      height=50> </TD>
+    <TD width="60%" align=middle><A 
+      onmouseover=" return event_over(this,'NeHe Ru.')  " 
+      onmouseout=" return event_out(this) " 
+      href="http://pmg.org.ru/nehe/index.html"><FONT class=linksbig>Народный 
+      учебник по OpenGL</FONT></A><BR></TD>
+    <TD vAlign=center width="20%" align=middle><IMG hspace=0 
+      alt="Урок 47. OpenGL" align=right 
+      src="Урок%2047_%20Вершинные%20шейдеры%20CG_files/nehe47.jpg" width=80 
+      height=60> </TD></TR></TBODY></TABLE></DIV>
+<DIV id=head>
+<P class=head1>Урок 47. Вершинные шейдеры CG.</P></DIV>
+<DIV id=main bgcolor="#ADADFF">
+<P class=textnoalign align=left><A onmouseover=" return event_over(this,this)  " 
+onmouseout=" return event_out(this) " 
+href="http://nehe.gamedev.net/data/lessons/lesson.asp?lesson=47 target=" 
+_blank?><FONT class=link><B>CG Vertex Shader</B></FONT></A> <BR></P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Использование вершинных и фрагментных (или пиксельных) 
+шейдеров имеет массу преимуществ. Наиболее очевидное – разгрузка ЦПУ (CPU) за 
+счет загрузки ГПУ (GPU). Gg – это простой и понятный язык для написания мощных 
+шейдеров. (Примечание переводчика: шейдеры – это программы, которые исполняются 
+графическим процессором (ГПУ или GPU)).</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Этот урок преследует несколько целей. Во-первых, демонстрирует 
+простой вершинный шейдер, который что-то делает, без всяких лишних и&nbsp; не 
+очень-то нужных эффектов типа освещения и тому подобного. Во-вторых, показывает 
+простой механизм для запуска вершинных шейдеров с понятными и видимыми 
+результатами, используя OpenGL. Таким образом, этот урок предназначен для 
+новичков, которые интересуются Cg, и имеют не много опыта работы с OpenGL.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Этот урок основан на базовом коде NeHeGL. Если Вам нужна более 
+подробная информация о Cg сходите на сайт NVidia (developer.nvidia.com), а на 
+сайте <A href="http://www.cgshaders.org/">http://www.cgshaders.org/</A> можно 
+найти множество крутых шейдеров.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>ПРИМЕЧАНИЕ: Этот урок не предназначен, для того чтобы 
+рассказать Вам все об Cg. Я намерен преподать Вам только то, как загрузить и 
+запустить вершинные шейдеры с помощью OpenGL.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword><U><SPAN style="FONT-SIZE: 13.5pt">Настройка:</SPAN></U> </P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Вначале (если Вы это не сделали), надо скачать компилятор Cg с 
+сайта NVidia. Загружайте версию 1.1, так как между версией 1.1 и 1.0 есть ряд 
+существенных отличий (разные имена переменных, замена функций и т.д.), и если 
+код компилировался под одной версией, то необязательно он будет компилироваться 
+с другой.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Далее поместите заголовочные файлы и библиотеки Cg в 
+соответствующие директории Visual Studio. Поскольку я подозрительно отношусь к 
+работе инсталляторов, я копирую библиотеки:</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>Из<SPAN lang=EN-US>: C:\Program Files\NVIDIA 
+Corporation\Cg\lib</SPAN></P>
+<P class=textpreword>В<SPAN lang=EN-US>:&nbsp;&nbsp; C:\Program Files\Microsoft 
+Visual Studio\VC98\Lib</SPAN></P>
+<P class=textword>&nbsp;</P>
+<P class=textword>и заголовочные файлы (поддиректория Cg и Gљext.h в 
+поддиректорию GL)...</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>Из<SPAN lang=EN-US>: C:\Program Files\NVIDIA 
+Corporation\Cg\include</SPAN></P>
+<P class=textpreword>В<SPAN lang=EN-US>:&nbsp;&nbsp; C:\Program Files\Microsoft 
+Visual Studio\VC98\Include</SPAN></P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Теперь все готово для урока. </P>
+<P class=textword>&nbsp;</P>
+<P class=textword><U><SPAN style="FONT-SIZE: 13.5pt">Урок по Cg:</SPAN></U> </P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Большая часть информации в этом уроке взята из Руководства 
+пользователя по инструментарию Cg.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Если несколько важных моментов, которые вы должны помнить при 
+работе с вершинными (и позже с фрагментными) программами. Прежде всего, надо 
+понимать, что вершинная программа выполняется полностью на КАЖДОЙ вершине. 
+Единственный способ запустить вершинную программу на выбранной вершине состоит в 
+том, что надо загружать/выгружать программу для каждо отдельной вершины, или 
+обработать вершины в потоке, на который воздействует вершинная программа, и 
+поток, которые не обрабатывается.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Выход вершинной программы передается во фрагментный шейдер, 
+независимо от того имеется ли фрагментный шейдер или нет.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>И, наконец, помните, что вершинная программа выполняется на 
+вершине до того, как обрабатывается примитив, в то время как фрагментная 
+программа выполняется после растеризации.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Примечание переводчика: вершинный шейдер модифицирует вершины 
+модели, а фрагментный шейдер модифицирует окраску модели. При этом на одну 
+модель может быть, как правило, только один вершинный и один фрагментный шейдер, 
+при этом вершины и фрагменты окраски модели обрабатываются, не зависимо одно от 
+другого, что при наличии нескольких процессоров на видеокарте позволяет 
+одновременно обрабатывать несколько вершин или фрагментов одновременно. 
+Модификация вершин позволяет изменять геометрию модели. После растеризации 
+текстур граней модели образуются фрагменты окраски, которые модифицируются 
+фрагментным шейдером.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Для начала создадим текстовый файл “wave.cg”, который будет 
+содержать определение структуры для передачи нашей Cg программе необходимой 
+информации для ее работы:</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>struct appdata </P>
+<P class=textpreword>{</P>
+<P class=textpreword>&nbsp; float4 position : POSITION;</P>
+<P class=textpreword>&nbsp; float4 color&nbsp; : COLOR0;</P>
+<P class=textpreword>&nbsp; float3 wave&nbsp; : COLOR1;</P>
+<P class=textpreword>};</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Все три переменные имеют предопределенный тип (POSITION, 
+COLOR0 и COLOR1, соответственно). Эти предопределенные имена используются для 
+связывания. В OpenGL, эти предопределенные имена неявно отображают входа с 
+соответствующими аппаратными регистрами. Основная программа должна обеспечит 
+передачу данных для каждой из этих переменных. Переменная position ТРЕБУЕТСЯ, 
+так как она используется для растеризации. Это единственная переменная, которая 
+требуется для работы вершинной программы.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Следующее, нам надо создать структуру, которая будет содержать 
+результат для последующей работы фрагментной программы.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>struct vfconn</P>
+<P class=textpreword>{</P>
+<P class=textpreword>&nbsp; float4 HPos&nbsp; : POSITION;</P>
+<P class=textpreword>&nbsp; float4 Col0&nbsp; : COLOR0;</P>
+<P class=textpreword>};</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Как в случае входа, каждая выходная переменная связана с 
+предопределенным именем. Hpos представляет позицию преобразованную в гомогенное 
+пространство отсечения. Col0 представляет цвет вершины после изменения 
+сделанного вершинной программой.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Теперь надо написать саму программу, которая использует обе 
+структуры.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>vfconn main(appdata IN,&nbsp; uniform float4x4 
+ModelViewProj)</P>
+<P class=textpreword>{</P>
+<P class=textpreword>&nbsp; vfconn 
+OUT;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Переменная для передачи данных 
+во фрагментный шейдер</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Также как в Си, мы задаем нашу функцию, которая возвращает 
+структуру vfconn, имя функции (“main”, но может быть другим), и параметры. В 
+нашем примере, структура appdata – это входная переменная (содержит позицию 
+текущей вершины, цвет вершины и значения для формирования волны на нашей 
+модели).</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Примечание переводчика: за размещение фактических значений в 
+эту структуру отвечает драйвер GPU.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Мы также принимаем постоянный параметр – матрицу вида, модели 
+и проекции из <SPAN lang=EN-US>OpenGL</SPAN>. Это значение неизменно, поскольку 
+мы манипулируем нашими вершинами, и поэтому упоминается постоянное. Эта матрица 
+требуется для преобразования позиции вершины в гомогенное пространство 
+отсечения.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Далее мы определяем переменную, в которой хранятся наши 
+модифицированные значения из вершинного шейдера. Эти значения возвращаются в 
+конце функции, и передаются во фрагментный шейдер (если он существует).</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Теперь надо выполнить модификацию данных вершины.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>&nbsp; // Изменим позицию Y вершины по синусу.</P>
+<P class=textpreword>&nbsp; IN.position.y = ( sin(IN.wave.x + (IN.position.z / 
+4.0) ) +</P>
+<P 
+class=textpreword>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+&nbsp;sin(IN.wave.x + (IN.position.x / 5.0) ) ) * 2.5f;</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Мы изменяем координату Y в зависимости от текущих координат X 
+и Z. Координаты X и Z делим на 4.0 и 5.0 соответственно, чтобы сгладить их 
+(чтобы понять, что я имею в виду можно заменить эти значения на 1.0). </P>
+<P class=textword>&nbsp;</P>
+<P class=textword>В переменной IN.wave находится постоянно увеличивающееся 
+значение, которое производит синусоидальную волну на нашей модели. Эта 
+переменная задается в основной программе. Поэтому, мы вычисляем координату Y как 
+синус от X и Z. Наконец, мы масштабируем результат на 2.5, чтобы сделать волны, 
+более высокими. </P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Далее мы делаем необходимые операции для вычисления выходного 
+значения, которое будет использоваться фрагментной программой.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>&nbsp; // Трансформация позиции вершины в гомогенном 
+пространстве отсечения (требуется)</P>
+<P class=textpreword>&nbsp; OUT.HPos = mul(ModelViewProj, IN.position);</P>
+<P class=textpreword>&nbsp;</P>
+<P class=textpreword>&nbsp; // Зададим цвет из IN.color</P>
+<P class=textpreword>&nbsp; OUT.Col0.xyz = IN.color.xyz;</P>
+<P class=textpreword>&nbsp;</P>
+<P class=textpreword>&nbsp; return OUT;</P>
+<P class=textpreword>}</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Вначале мы преобразуем новую позицию вершины в гомогенное 
+пространство отсечения. Далее присваиваем входной цвет в выходной цвета. В 
+конце, мы возвращаем это значение для использования во фрагментный шейдер (если 
+он есть). </P>
+<P class=textword>&nbsp;</P>
+<P class=textword>А сейчас мы перейдем к рассмотрению нашей основной программы, 
+которая создает модель из треугольников, и запускает наш шейдер для создания 
+волнового эффекта.</P>
+<P class=textword><U><SPAN style="FONT-SIZE: 13.5pt">Урок по OpenGL:</SPAN></U> 
+</P>
+<P class=textword>Основные шаги при работе с шейдером Cg заключаются в 
+генерировании модели, загрузки ее, компилировании нашей Cg программы и затем 
+запуске нашей программы во время визуализации модели.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Вначале необходимо кое-что настроить. Мы должны включить 
+необходимые заголовочные файлы для выполнения шейдеров Cg с OpenGL. В числе 
+других операторов #include, мы должны включить заголовочные файлы Cg и CgGL.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>#<SPAN lang=EN-US>include</SPAN> &lt;<SPAN 
+lang=EN-US>cg</SPAN>\<SPAN lang=EN-US>cg</SPAN>.<SPAN lang=EN-US>h</SPAN>&gt; 
+&nbsp;&nbsp;&nbsp;// НОВОЕ: заголовок <SPAN lang=EN-US>Cg</SPAN> </P>
+<P class=textpreword>#<SPAN lang=EN-US>include</SPAN> &lt;<SPAN 
+lang=EN-US>cg</SPAN>\<SPAN lang=EN-US>cggl</SPAN>.<SPAN lang=EN-US>h</SPAN>&gt; 
+&nbsp;// НОВОЕ: заголовок <SPAN lang=EN-US>Cg</SPAN><SPAN lang=EN-US> </SPAN>для 
+<SPAN lang=EN-US>OpenGL</SPAN></P>
+<P class=textpreword>&nbsp;</P>
+<P class=textword>Сейчас мы готовы настроить наш проект и начать работать. До 
+старта мы должны убедиться в том, что Visual Studio найдет корректные 
+библиотеки. Следующий код позволит нам добиться этой цели!</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>#pragma comment( lib, "cg.lib" )&nbsp; &nbsp;&nbsp;// 
+Искать Cg.lib во время линковки</P>
+<P class=textpreword>#pragma comment( lib, "cggl.lib" ) &nbsp;// Искать CgGL.lib 
+во время линковки</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Затем мы создадим несколько глобальных переменных для нашей 
+модели и переключатель для включения и выключения программы CG.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>#define&nbsp;&nbsp;&nbsp; SIZE&nbsp; 
+64&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+// Зададим размер модели по оси X/Z</P>
+<P class=textpreword>bool&nbsp;&nbsp;&nbsp; cg_enable = TRUE, 
+sp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;// Переключатель Вкл/Выкл программы Cg, Нажат 
+пробел?</P>
+<P class=textpreword>GLfloat&nbsp;&nbsp;&nbsp; 
+mesh[SIZE][SIZE][3];&nbsp;&nbsp;&nbsp; // Наша статическая модель</P>
+<P class=textpreword>GLfloat&nbsp;&nbsp;&nbsp; wave_movement = 0.0f;&nbsp;&nbsp; 
+// Наша переменная для смещения волн вдоль модели</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Мы определяем размер в 64 точки по каждому краю нашей модели 
+(оси X и Z). Затем создаем массив для каждой вершины модели. Последняя 
+переменная требуется для создания перемещения синусоидальной волны вдоль модели. 
+</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Теперь надо задать глобальные переменные для Cg.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>CGcontext&nbsp; cgContext; &nbsp;// Контекст сохранения 
+нашей Cg программы</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Первая переменная, которая нам нужна <SPAN 
+lang=EN-US>CGcontext</SPAN>. Переменная <SPAN lang=EN-US>CGcontext</SPAN><SPAN 
+lang=EN-US> </SPAN>- контейнер для множества программ Cg. В общем, необходима 
+только одна переменная <SPAN lang=EN-US>CGcontext</SPAN><SPAN lang=EN-US> 
+</SPAN>независимо от числа используемых вершинных и фрагментных программ. Можно 
+выбирать различные программы из контекста <SPAN lang=EN-US>CGcontext</SPAN>, 
+используя функций <SPAN lang=EN-US>cgGetFirstProgram</SPAN><SPAN lang=EN-US> 
+</SPAN>и <SPAN lang=EN-US>cgGetNextProgram</SPAN>. </P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Далее определяем переменную <SPAN 
+lang=EN-US>CGprogram</SPAN><SPAN lang=EN-US> </SPAN>для нашей вершинной 
+программы.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword><SPAN lang=EN-US>CGprogram</SPAN>&nbsp; <SPAN 
+lang=EN-US>cgProgram</SPAN>; &nbsp;// Наша вершинная программа <SPAN 
+lang=EN-US>Cg</SPAN></P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Переменная <SPAN lang=EN-US>CGprogram</SPAN><SPAN lang=EN-US> 
+</SPAN>используется для сохранения вершинной программы. <SPAN 
+lang=EN-US>CGprogram</SPAN><SPAN lang=EN-US> </SPAN>- по существу указатель на 
+вершинную (или фрагментную) программу. Она добавляется к <SPAN 
+lang=EN-US>CGcontext</SPAN>. </P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Кроме этого, надо иметь переменную для сохранения профиля 
+шейдера.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>CGprofile&nbsp; cgVertexProfile; &nbsp;// Профиль 
+использования нашего вершинного шейдера</P>
+<P class=textword>&nbsp;</P>
+<P class=textword><SPAN lang=EN-US>CGprofile</SPAN><SPAN lang=EN-US> 
+</SPAN>задает самый лучший профиль. Так же надо иметь переменные, которые 
+обеспечивают связь между переменными в нашей основной программе и переменными в 
+шейдере.</P>
+<P class=textword></SPAN></P>
+<P class=textpreword><SPAN lang=EN-US>CGparameter&nbsp; position, color, 
+modelViewMatrix, wave; // </SPAN>Параметры необходимые в шейдере</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Каждый <SPAN lang=EN-US>CGparameter</SPAN><SPAN lang=EN-US> 
+</SPAN>- по существу указатель на соответствующий параметр в шейдере. </P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Теперь, когда мы разобрались в глобальных переменных, пришло 
+время подобраться к настройке модели и шейдера. </P>
+<P class=textword>&nbsp;</P>
+<P class=textword>В функции Initialize до вызова “ return TRUE;” мы должны 
+добавить новый код.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; glPolygonMode(GL_FRONT_AND_BACK, 
+GL_LINE);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 
+</SPAN>Рисовать каркасную модель</P>
+<P class=textpreword><SPAN lang=EN-US></SPAN>&nbsp;</P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; // </SPAN>Создать модель</P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; for (int x = 0; x &lt; SIZE; 
+x++)</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; {</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp;&nbsp;&nbsp; for (int z = 0; z &lt; 
+SIZE; z++)</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp;&nbsp;&nbsp; {</SPAN></P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <SPAN 
+lang=EN-US>mesh</SPAN>[<SPAN lang=EN-US>x</SPAN>][<SPAN lang=EN-US>z</SPAN>][0] 
+= (<SPAN lang=EN-US>float</SPAN>) (<SPAN lang=EN-US>SIZE</SPAN> / 2) - <SPAN 
+lang=EN-US>x</SPAN>; // Центр модели в начале координат</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <SPAN 
+lang=EN-US>mesh</SPAN>[<SPAN lang=EN-US>x</SPAN>][<SPAN lang=EN-US>z</SPAN>][1] 
+= 0.0<SPAN 
+lang=EN-US>f</SPAN>;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+// Задать все значение <SPAN lang=EN-US>Y</SPAN><SPAN lang=EN-US> </SPAN>для 
+всех точек равным 0</P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+mesh[x][z][2] = (float) (SIZE / 2) - z; // </SPAN>Центр модели в начале 
+координат</P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp;&nbsp;&nbsp; }</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; }</SPAN></P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Сначала вызываем <SPAN lang=EN-US>glPolygonMode</SPAN> для 
+задания каркасного отображения (без хорошего освещения сплошная заливка выглядит 
+ужасно). Затем проходим по модели, задавая значения X и Z относительно начала 
+координат. Значение Y для каждой точки задается равным 0.0f. Интересно отметить, 
+что значения сгенерированные на этом шаге ни изменяются во время выполнения. 
+</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>С инициализацией модели покончено, теперь надо 
+инициализировать <SPAN lang=EN-US>Cg</SPAN>.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; // </SPAN>Настройка<SPAN 
+lang=EN-US> Cg</SPAN></P>
+<P class=textpreword>&nbsp; <SPAN lang=EN-US>cgContext</SPAN> = <SPAN 
+lang=EN-US>cgCreateContext</SPAN>(); // Создание нового контекста для наших 
+<SPAN lang=EN-US>Cg</SPAN><SPAN lang=EN-US> </SPAN>программ</P>
+<P class=textpreword>&nbsp;</P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; // </SPAN>Проверка нашего 
+контекста<SPAN lang=EN-US>, </SPAN>что все успешно</P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; if (cgContext == NULL)</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; {</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp;&nbsp;&nbsp; MessageBox(NULL, 
+"Failed To Create Cg Context", "Error", MB_OK);</SPAN></P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; <SPAN lang=EN-US>return</SPAN><SPAN 
+lang=EN-US> </SPAN><SPAN lang=EN-US>FALSE</SPAN>; // Дальше нельзя 
+продолжать</P>
+<P class=textpreword>&nbsp; }</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Сначала пробуем создать новый <SPAN 
+lang=EN-US>CGcontext</SPAN> для хранения программ Cg. Если возвращено значение 
+равное NULL, то создание контекста потерпело фиаско. Это&nbsp; обычно происходит 
+из-за ошибок распределения памяти.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>&nbsp; <SPAN lang=EN-US>cgVertexProfile</SPAN> = <SPAN 
+lang=EN-US>cgGLGetLatestProfile</SPAN>(<SPAN lang=EN-US>CG</SPAN>_<SPAN 
+lang=EN-US>GL</SPAN>_<SPAN lang=EN-US>VERTEX</SPAN>); // Взять последний профиль 
+<SPAN lang=EN-US>GL</SPAN></P>
+<P class=textpreword>&nbsp;</P>
+<P class=textpreword>&nbsp; <SPAN lang=EN-US>// </SPAN>Проверить<SPAN 
+lang=EN-US>, </SPAN>что все хорошо</P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; if (cgVertexProfile == 
+CG_PROFILE_UNKNOWN)</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; {</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp;&nbsp;&nbsp; MessageBox(NULL, 
+"Invalid profile type", "Error", MB_OK);</SPAN></P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; <SPAN lang=EN-US>return</SPAN><SPAN 
+lang=EN-US> </SPAN><SPAN lang=EN-US>FALSE</SPAN>; // Дальше нельзя 
+продолжать</P>
+<P class=textpreword>&nbsp; <SPAN lang=EN-US>}</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US></SPAN>&nbsp;</P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; 
+cgGLSetOptimalOptions(cgVertexProfile); // </SPAN>Задать текущий профиль</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Теперь определим последний использованный профиль. Для 
+определения последнего фрагментного профиля вызываем <SPAN 
+lang=EN-US>cgGLGetLatestProfile</SPAN><SPAN lang=EN-US> </SPAN>с типом профиля 
+CG_GL_FRAGMENT. Если возвращаемое значение - CG_PROFILE_UNKNOWN, то это значит, 
+что нет соответствующего доступного профиля. С корректным профилем, выполняем 
+вызов <SPAN lang=EN-US>cgGLSetOptimalOptions</SPAN>. Эта функция задает 
+параметры компилятора, которые основаны на доступных параметрах компилятора, GPU 
+и драйвера. Эти функции используются с каждой новой программой C<SPAN 
+lang=EN-US>g</SPAN>. (Это необходимо для оптимизации компиляции шейдера в 
+зависимости от видеокарты и драйверов).</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; // </SPAN>Загрузка и компиляция 
+шейдера из файла</P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; cgProgram = 
+cgCreateProgramFromFile(cgContext, CG_SOURCE, "CG/Wave.cg", cgVertexProfile, 
+"main", 0);</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US></SPAN>&nbsp;</P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; // </SPAN>Все успешно<SPAN 
+lang=EN-US>?</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; if (cgProgram == NULL)</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; {</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp;&nbsp;&nbsp; // </SPAN>Определим, 
+что не так</P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp;&nbsp;&nbsp; CGerror Error = 
+cgGetError();</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US></SPAN>&nbsp;</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; // Вывод сообщения с тем, что 
+произошло.</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; <SPAN lang=EN-US>MessageBox(NULL, 
+cgGetErrorString(Error), "Error", MB_OK);</SPAN></P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; <SPAN lang=EN-US>return</SPAN><SPAN 
+lang=EN-US> </SPAN><SPAN lang=EN-US>FALSE</SPAN>; // Дальше нельзя 
+продолжать</P>
+<P class=textpreword>&nbsp; <SPAN lang=EN-US>}</SPAN></P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Теперь пытаемся создать нашу программу из исходного файла. Мы 
+вызываем функцию <SPAN lang=EN-US>cgCreateProgramFromFile</SPAN>, которая 
+загрузит и скомпилирует Cg программу из указанного файла. Первый параметр 
+определяет, к какой переменной <SPAN lang=EN-US>CGcontext</SPAN><SPAN 
+lang=EN-US> </SPAN>программа будет присоединена. Второй параметр определяет, что 
+код Cg находится в файле, который содержит исходный текст (CG_SOURCE), или файл, 
+который содержит объектный код от заранее компилированной программы (CG_OBJECT). 
+Третий параметр - название файла с программой Cg. Четвертый параметр - последний 
+профиль для заданного типа программы (использовать вершинный профиль для 
+вершинных программ, фрагментный профиль для фрагментных программ). Пятый 
+параметр определяет функцию входа Cg программы. Эта функция может быть названа 
+произвольно, и часто называется по-другому, чем "main". Последний параметр 
+задает добавочные параметры, которые будут переданы к компилятору <SPAN 
+lang=EN-US>Cg</SPAN>. Их часто задают как NULL. </P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Если <SPAN lang=EN-US>cgCreateProgramFromFile</SPAN><SPAN 
+lang=EN-US> </SPAN>выполняется с ошибкой по какой-то причине, мы получаем 
+последнюю ошибку, вызывая <SPAN lang=EN-US>cgGetError</SPAN>. Тогда можно 
+получить строку с ошибкой из <SPAN lang=EN-US>CGerror</SPAN>, вызывая <SPAN 
+lang=EN-US>cgGetErrorString</SPAN>. </P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Инициализация почти закончена.</P>
+<P class=textword></SPAN></P>
+<P class=textpreword>&nbsp; <SPAN lang=EN-US>// </SPAN>Загрузка программы</P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; 
+cgGLLoadProgram(cgProgram);</SPAN></P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Следующий шаг после загрузки нашей программу это связывание. 
+Все программы надо вначале загрузить прежде, чем они могут быть связаны с 
+текущим состоянием.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>&nbsp; // Получить дескрипторы для каждого из наших 
+параметров, так как</P>
+<P class=textpreword>&nbsp; <SPAN lang=EN-US>// </SPAN>мы будем изменять их в 
+нашем коде</P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; position&nbsp; = 
+cgGetNamedParameter(cgProgram, "IN.position");</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; color&nbsp;&nbsp;&nbsp; = 
+cgGetNamedParameter(cgProgram, "IN.color");</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; wave&nbsp;&nbsp;&nbsp; = 
+cgGetNamedParameter(cgProgram, "IN.wave");</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US>&nbsp; modelViewMatrix&nbsp; = 
+cgGetNamedParameter(cgProgram, "ModelViewProj");</SPAN></P>
+<P class=textpreword><SPAN lang=EN-US></SPAN>&nbsp;</P>
+<P class=textpreword>&nbsp; <SPAN lang=EN-US>return</SPAN><SPAN lang=EN-US> 
+</SPAN><SPAN lang=EN-US>TRUE</SPAN>; // Вернуть <SPAN lang=EN-US>TRUE</SPAN> 
+(Инициализация успешна)</P>
+<P class=textpreword>}</P>
+<P class=textword><SPAN lang=EN-US></SPAN>&nbsp;</P>
+<P class=textword>На заключительном шаге инициализации надо получить дескрипторы 
+переменных, которыми мы будем управлять из нашей Cg программы. Для каждого <SPAN 
+lang=EN-US>CGparameter</SPAN><SPAN lang=EN-US> </SPAN>мы получаем дескриптор 
+соответствующего параметра программы Cg. Если параметр не существует, <SPAN 
+lang=EN-US>cgGetNamedParameter</SPAN><SPAN lang=EN-US> </SPAN>возвратит NULL. 
+</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Если параметры в программе Cg неизвестны, может использовать 
+функции <SPAN lang=EN-US>cgGetFirstParameter</SPAN><SPAN lang=EN-US> </SPAN>и 
+<SPAN lang=EN-US>cgGetNextParameter</SPAN>, чтобы найти все параметры в заданной 
+<SPAN lang=EN-US>CGprogram</SPAN>.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Наконец, мы закончили с инициализацией нашей Cg программы, 
+теперь быстро позаботимся об очистке самостоятельно, а затем переходим к 
+рисованию. </P>
+<P class=textword>&nbsp;</P>
+<P class=textword>В функции Deinitialize, мы должны очистить нашу Cg 
+программу.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>&nbsp; cgDestroyContext(cgContext); // Уничтожить контекст 
+Cg и все программы в нем</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Надо просто вызывать <SPAN 
+lang=EN-US>cgDestroyContext</SPAN><SPAN lang=EN-US> </SPAN>для каждой из 
+переменных <SPAN lang=EN-US>CGcontext</SPAN><SPAN lang=EN-US> </SPAN>(их можем 
+иметь несколько, но обычно есть только одина). Можно индивидуально удалять 
+каждую <SPAN lang=EN-US>CGprograms</SPAN>, вызывая <SPAN 
+lang=EN-US>cgDestoryProgram</SPAN>, однако, вызывая <SPAN 
+lang=EN-US>cgDestoryContext</SPAN>, мы удаляем все <SPAN 
+lang=EN-US>CGprograms</SPAN>, которые содержались в <SPAN 
+lang=EN-US>CGcontext</SPAN>, и затем удаляем сам <SPAN 
+lang=EN-US>CGcontext</SPAN>. </P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Теперь мы добавим код к функции Update. Следующий код 
+проверяет, нажат ли пробел и не удерживается. Если пробел нажат и не 
+удерживается, мы меняем значение cg_enable из true в false или из false в 
+true.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>&nbsp; if (g_keys-&gt;keyDown [' '] &amp;&amp; !sp)</P>
+<P class=textpreword>&nbsp; {</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; sp=TRUE;</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; cg_enable=!cg_enable;</P>
+<P class=textpreword>&nbsp; }</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Далее проверим, был ли пробел отжат, и если так, то sp (нажат 
+пробел?) равно false.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>&nbsp; if (!g_keys-&gt;keyDown [' '])</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; sp=FALSE;</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Теперь, когда все приготовления сделаны, мы можем перейти к 
+самому интересному – визуализации нашей модели и запуску вершинной программы. 
+</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Заключительная функция, которую мы должны изменить - функция 
+Draw. Мы добавим наш код после <SPAN lang=EN-US>glLoadIdentity </SPAN>и до <SPAN 
+lang=EN-US>glFlush.</SPAN></P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>&nbsp; // Позиция камеры для просмотра нашей модели с 
+расстояния</P>
+<P class=textpreword>&nbsp; gluLookAt(0.0f, 25.0f, -45.0f, 0.0f, 0.0f, 0.0f, 0, 
+1, 0);</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Сначала, мы хотим сдвинуть нашу точку зрения достаточно далеко 
+от начала координат, для того чтобы увидеть всю модель. Мы перемещаем камеру на 
+25 единиц вверх, на 45 единиц от экрана, и направляем фокус на начало 
+координат.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>&nbsp; // Задать матрицу вида и модели шейдера такой же, 
+как матрица OpenGL</P>
+<P class=textpreword>&nbsp; cgGLSetStateMatrixParameter(modelViewMatrix, 
+CG_GL_MODELVIEW_PROJECTION_MATRIX, CG_GL_MATRIX_IDENTITY);</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Далее надо присвоить матрице вида и модели шейдера матрицу 
+вида и модели <SPAN lang=EN-US>OpenGL</SPAN>. Это необходимо сделать, так как 
+позиция, которая изменяется вершинном шейдере, необходимо преобразовать в новую 
+позицию в гомогенном пространстве отсечения. Для этого надо умножить новую 
+позицию на матрицу вида и модели.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>&nbsp; if (cg_enable)</P>
+<P class=textpreword>&nbsp; {</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; cgGLEnableProfile(cgVertexProfile); // 
+Разрешить профиль вершинного шейдера</P>
+<P class=textpreword>&nbsp;</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; // Связать вершинный шейдер с текущим 
+состоянием</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; cgGLBindProgram(cgProgram);</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Здесь мы должны разрешить вершинный профиль<SPAN lang=EN-US>. 
+cgGLEnableProfile </SPAN>разрешает заданный профиль<SPAN lang=EN-US>, 
+</SPAN>делая вызовы <SPAN lang=EN-US>OpenGL </SPAN>релевантными<SPAN 
+lang=EN-US>. cgGLBindProgram </SPAN>связывает программу с текущим 
+состоянием<SPAN lang=EN-US>. </SPAN>Это по существу активизирует нашу программу, 
+и приводит к тому, что наша программа будет выполняться на каждой вершине, 
+которая передана в <SPAN lang=EN-US>GPU</SPAN>. Эта программа будет выполняться 
+на каждой вершине, пока мы не отключим этот профиль.</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; // Задать цвет рисования ярко-зеленным 
+(может быть изменен в шейдере, и так далее...)</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; cgGLSetParameter4f(color, 0.5f, 1.0f, 
+0.5f, 1.0f);</P>
+<P class=textpreword>&nbsp; }</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Следующее, мы задаем цвет модели. Это значение может быть 
+динамически изменено при визуализации модели, например, чтобы создать эффект 
+циклически повторяющих цветов. </P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Обратите внимание на условие cg_enable равно true ? Если это 
+условие не выполняется, то не выполняется ни одна из команд Cg выше. Это 
+препятствует коду Cg&nbsp; выполняться. </P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Теперь мы готовы визуализировать нашу модель!</P>
+<P class=textword>&nbsp;</P>
+<P class=textpreword>&nbsp; // Начать рисование модели</P>
+<P class=textpreword>&nbsp; for (int x = 0; x &lt; SIZE - 1; x++)</P>
+<P class=textpreword>&nbsp; {</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; // Рисовать полоску треугольников для 
+каждой колонки нашей модели</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; glBegin(GL_TRIANGLE_STRIP);</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; for (int z = 0; z &lt; SIZE - 1; 
+z++)</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; {</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Задать параметр волны для 
+нашего шейдера.</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Значение wave 
+увеличивается в основной программе</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cgGLSetParameter3f(wave, 
+wave_movement, 1.0f, 1.0f);</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; glVertex3f(mesh[x][z][0], 
+mesh[x][z][1], mesh[x][z][2]);&nbsp; // Рисовать вершину</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; glVertex3f(mesh[x+1][z][0], 
+mesh[x+1][z][1], mesh[x+1][z][2]);&nbsp; // Рисовать вершину</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; wave_movement += 0.00001f; 
+// Увеличить движение волны</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (wave_movement &gt; 
+TWO_PI) // Предотвратить крах программы</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; wave_movement = 
+0.0f;</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; }</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; glEnd();</P>
+<P class=textpreword>&nbsp; }</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Для визуализации нашей модели, мы просто делаем цикл по оси Z 
+для каждого значения X (по существу мы работаем по столбцам от одной стороны 
+нашей модели до другой). Для каждого столбца, мы начинаем новую полосу 
+треугольников.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>При визуализации каждой вершины мы динамически передаем 
+значение параметра волны в вершинную программу. Поскольку это значение задается 
+переменной wave_movement в нашей основной программе, и она непрерывно 
+увеличивается, то кажется, что синусоидальные волны перемещаются вдоль и вниз по 
+модели.</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Затем мы передаем вершину в <SPAN lang=EN-US>GPU</SPAN><SPAN 
+lang=EN-US> </SPAN>и во время обработки ее, автоматически происходит выполнение 
+нашей вершинной программы на этой вершине. Мы медленно увеличиваем переменную 
+wave_movement, чтобы получить медленное и гладкое движение. </P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Если значение wave_movement достигает TWO_PI, то мы сбрасываем 
+ее в 0, чтобы предотвратить крах программы. Константа TWO_PI задана вначале 
+программы.</P>
+<P class=textword></SPAN></P>
+<P class=textpreword>&nbsp; if (cg_enable)</P>
+<P class=textpreword>&nbsp;&nbsp;&nbsp; cgGLDisableProfile(cgVertexProfile); // 
+Запрет вершинного профиля</P>
+<P class=textword>&nbsp;</P>
+<P class=textword>Как только мы закончили визуализацию, мы смотрим, если 
+cg_enable равно true, то мы отключаем наш вершинный профиль и продолжаем 
+визуализацию, если нам хочется еще что-то нарисовать.</P>
+<P class=textnoalign align=right><FONT color=#0000a0><B>© Оуэн Боурн 
+</B></B></FONT></P></DIV>
+<DIV id=end>
+<P><A onmouseover=" return event_over(this,'Программирование магических игр')  " 
+onmouseout=" return event_out(this) " href="http://pmg.org.ru/"><FONT 
+class=link><B>PMG</B></FONT></A> <FONT class=comment>&nbsp;13 апреля 
+2007&nbsp;(c)&nbsp;</FONT> <A 
+onmouseover=" return event_over(this,'Почта переводчику')  " 
+onmouseout=" return event_out(this) " href="mailto:gok@aeromap.com"><FONT 
+class=link><B>Сергей Анисимов</B></FONT></A> </P></DIV></CENTER>
+<SCRIPT language=JavaScript>
+<!--
+form_print();
+//-->
+</SCRIPT>
+</BODY></HTML>

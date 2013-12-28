@@ -1,0 +1,29 @@
+struct appdata 
+{
+  float4 position : POSITION;
+  float4 color  : COLOR0;
+  float3 wave  : COLOR1;
+};
+
+struct vfconn
+{
+  float4 HPos  : POSITION;
+  float4 Col0  : COLOR0;
+};
+
+vfconn main(appdata IN,  uniform float4x4 ModelViewProj)
+{
+  vfconn OUT;  // Переменная для передачи данных во фрагментный шейдер
+
+  // Изменим позицию Y вершины по синусу.
+  IN.position.y = ( sin(IN.wave.x + (IN.position.z / 4.0) ) +
+                    sin(IN.wave.x + (IN.position.x / 5.0) ) ) * 2.5f;
+
+  // Трансформация позиции вершины в гомогенном пространстве отсечения (требуется)
+  OUT.HPos = mul(ModelViewProj, IN.position);
+
+  // Зададим цвет из IN.color
+  OUT.Col0.xyz = IN.color.xyz;
+
+  return OUT;
+}

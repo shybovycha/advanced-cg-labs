@@ -1,0 +1,49 @@
+struct pixel_in {
+	float4 color : COLOR;
+	float3 texcoord : TEXCOORD0;
+};
+
+struct pixel_out {
+	float4 color : COLOR;
+};
+
+float4 yuv2rgb(float4 c)
+{
+	c.b -= 0.0625f;
+	c.b *= 1.1643f;
+	c.g -= 0.5f;
+	c.a -= 0.5f;
+
+	float4 v = c.bbba;
+	v.r += 1.5958f * c.a;
+	v.g -= 0.39173f * c.a + 0.81290f * c.g;
+	v.b += 2.017f * c.g;
+	v.a = 1.0f;
+
+	return v;
+/*
+	c.r -= 0.0625f;
+	c.r *= 1.1643f;
+	c.g -= 0.5f;
+	c.b -= 0.5f;
+
+	float4 v = c.rrra;
+	v.r += 1.5958f * c.b;
+	v.g -= 0.39173f * c.b + 0.81290f * c.g;
+	v.b += 2.017f * c.g;
+
+	return v;
+*/
+}
+
+pixel_out main(pixel_in IN, uniform sampler2D texture : TEXUNIT0, uniform float2 image)
+{
+	pixel_out OUT;
+
+	float3 pos = IN.texcoord;
+	pos.y = 1.0f - pos.y;
+
+	OUT.color = yuv2rgb(tex2D(texture, pos));
+	return OUT;
+}
+	
