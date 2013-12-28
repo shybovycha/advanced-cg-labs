@@ -68,83 +68,117 @@ int main()
     const GLchar* fragmentSource = (const GLchar*) getShaderSource("../data/fragment.glsl");
 
     // Initialize GLEW
-        glewExperimental = GL_TRUE;
-        glewInit();
+    glewExperimental = GL_TRUE;
+    glewInit();
 
-        // Create Vertex Array Object
-        GLuint vao;
-        glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
+    // Create and compile the vertex shader
+    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexSource, NULL);
+    glCompileShader(vertexShader);
 
-        // Create a Vertex Buffer Object and copy the vertex data to it
-        GLuint vbo;
-        glGenBuffers(1, &vbo);
+    // Create and compile the fragment shader
+    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
+    glCompileShader(fragmentShader);
 
-        GLfloat vertices[] = {
-             0.0f,  0.5f, 1.0f, 0.0f, 0.0f,
-             0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-            -0.5f, -0.5f, 0.0f, 0.0f, 1.0f
-        };
+    // Link the vertex and fragment shader into a shader program
+    GLuint shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glBindFragDataLocation(shaderProgram, 0, "outColor");
+    glLinkProgram(shaderProgram);
+    glUseProgram(shaderProgram);
 
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    GLushort indices[] = { 0, 1, 2 };
 
-        // Create and compile the vertex shader
-        GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexSource, NULL);
-        glCompileShader(vertexShader);
+    // Create Index Buffer Object
+    GLuint ibo;
+    glGenBuffers(1, &ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * sizeof(GLushort), indices, GL_STATIC_DRAW);
 
-        // Create and compile the fragment shader
-        GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
-        glCompileShader(fragmentShader);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-        // Link the vertex and fragment shader into a shader program
-        GLuint shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-        glBindFragDataLocation(shaderProgram, 0, "outColor");
-        glLinkProgram(shaderProgram);
-        glUseProgram(shaderProgram);
+    // Create a Vertex Buffer Object and copy the vertex data to it
+    GLfloat vertices[] = {
+         0.0f,  0.5f, 1.0f, 0.0f, 0.0f,
+         0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f
+    };
 
-        // Specify the layout of the vertex data
-        GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-        glEnableVertexAttribArray(posAttrib);
-        glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
+    GLuint vbo;
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-        GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
-        glEnableVertexAttribArray(colAttrib);
-        glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
+    // here, 3 * sizeof(vertex_struct). since vertex_struct is just a set of 5 elements, we get this: 3 * (5 * sizeof(GLfloat))
+    glBufferData(GL_ARRAY_BUFFER, 3 * (5 * sizeof(GLfloat)), vertices, GL_STATIC_DRAW);
 
-        while (window.isOpen())
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // Create Vertex Array Object
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
+    // Bind the VBO and setup pointers for the VAO
+    GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
+    GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
+    glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
+    glEnableVertexAttribArray(posAttrib);
+    glEnableVertexAttribArray(colAttrib);
+
+    // Bind the IBO for the VAO
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+
+    // cleanup
+    glBindVertexArray(0);
+    glDisableVertexAttribArray(posAttrib);
+    glDisableVertexAttribArray(colAttrib);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    printLog(ibo);
+    printLog(vbo);
+    printLog(vao);
+    printOpenGLError();
+
+    while (window.isOpen())
+    {
+        sf::Event windowEvent;
+        while (window.pollEvent(windowEvent))
         {
-            sf::Event windowEvent;
-            while (window.pollEvent(windowEvent))
+            switch (windowEvent.type)
             {
-                switch (windowEvent.type)
-                {
-                case sf::Event::Closed:
-                    window.close();
-                    break;
-                }
+            case sf::Event::Closed:
+                window.close();
+                break;
             }
-
-            // Clear the screen to black
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
-
-            // Draw a triangle from the 3 vertices
-            glDrawArrays(GL_TRIANGLES, 0, 3);
-
-            // Swap buffers
-            window.display();
         }
 
-        glDeleteProgram(shaderProgram);
-        glDeleteShader(fragmentShader);
-        glDeleteShader(vertexShader);
+        // Clear the screen to black
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
 
-        glDeleteBuffers(1, &vbo);
+        // Draw command
+        // The first to last vertex is 0 to 3
+        // 3 indices will be used to render a single triangle.
+        // The last parameter is the start address in the IBO => zero
+        glUseProgram(shaderProgram);
+        glBindVertexArray(vao);
+        glDrawRangeElements(GL_TRIANGLES, 0, 3, 3, GL_UNSIGNED_SHORT, NULL);
 
-        glDeleteVertexArrays(1, &vao);
+        // Swap buffers
+        window.display();
+    }
+
+    glDeleteProgram(shaderProgram);
+    glDeleteShader(fragmentShader);
+    glDeleteShader(vertexShader);
+
+    glDeleteBuffers(1, &vbo);
+
+    glDeleteVertexArrays(1, &vao);
 }
