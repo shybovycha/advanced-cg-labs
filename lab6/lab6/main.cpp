@@ -27,7 +27,14 @@ std::string getFileContent(char* filename)
 
 namespace Global
 {
-    std::vector<glm::vec2> points;
+    GLfloat points[] = {
+        0.2, 0.5,
+        0.7, 0.5,
+        0.5, 0.2
+    };
+
+    int points_num = 3;
+
     GLuint vbo, prog;
 };
 
@@ -94,32 +101,28 @@ void init()
     // load shaders
     Global::prog = CreateProgram(vert, frag);
 
-    // fill vertices
-    Global::points.push_back(glm::vec2(0.2, 0.5));
-    Global::points.push_back(glm::vec2(0.7, 0.5));
-    Global::points.push_back(glm::vec2(0.5, 0.2));
-
     // create and fill VBO
     glGenBuffers(1, &Global::vbo);
     glBindBuffer(GL_ARRAY_BUFFER, Global::vbo);
-    unsigned int numBytes = sizeof(glm::vec2) * Global::points.size();
-    glBufferData(GL_ARRAY_BUFFER, numBytes, &Global::points[0].x, GL_STATIC_DRAW);
+    // 2 components per vertex * 3 vertices
+    unsigned int numBytes = sizeof(GLfloat) * 2 * Global::points_num;
+    glBufferData(GL_ARRAY_BUFFER, numBytes, &Global::points, GL_STATIC_DRAW);
 }
 
 void display(void)
 {
-    glClear( GL_COLOR_BUFFER_BIT );
+    glClear(GL_COLOR_BUFFER_BIT);
 
-    glUseProgram( Global::prog );
+    glUseProgram(Global::prog);
 
-    GLint position_loc = glGetAttribLocation( Global::prog, "position" );
-    glBindBuffer( GL_ARRAY_BUFFER, Global::vbo );
-    glVertexAttribPointer( position_loc, 2, GL_FLOAT, GL_FALSE, sizeof( glm::vec2 ), 0 );
-    glEnableVertexAttribArray( position_loc );
+    GLint position_loc = glGetAttribLocation(Global::prog, "position");
+    glBindBuffer(GL_ARRAY_BUFFER, Global::vbo);
+    glVertexAttribPointer(position_loc, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 2, 0);
+    glEnableVertexAttribArray(position_loc);
 
-    glDrawArrays( GL_TRIANGLES, 0, Global::points.size() );
+    glDrawArrays(GL_TRIANGLES, 0, Global::points_num);
 
-    glDisableVertexAttribArray( position_loc );
+    glDisableVertexAttribArray(position_loc);
 
     glutSwapBuffers();
 }
