@@ -38,41 +38,61 @@ namespace Global
     GLuint vbo, prog;
 };
 
-void CheckStatus( const GLenum id )
+void checkShaderObjectStatus(const GLenum id)
 {
     GLint status = GL_FALSE, loglen = 10;
-    if( glIsShader(id) )    glGetShaderiv( id, GL_COMPILE_STATUS, &status );
-    if( glIsProgram(id) )   glGetProgramiv( id, GL_LINK_STATUS, &status );
-    if( GL_TRUE == status ) return;
-    if( glIsShader(id) )    glGetShaderiv( id, GL_INFO_LOG_LENGTH , &loglen);
-    if( glIsProgram(id) )   glGetProgramiv( id, GL_INFO_LOG_LENGTH , &loglen);
-    vector< char > log( loglen, 'E' );
-    if( glIsShader(id) )    glGetShaderInfoLog( id, loglen, NULL, &log[0] );
-    if( glIsProgram(id) )   glGetProgramInfoLog( id, loglen, NULL, &log[0] );
-    throw logic_error( string( log.begin(), log.end() ) );
+
+    if (glIsShader(id))
+        glGetShaderiv(id, GL_COMPILE_STATUS, &status);
+
+    if (glIsProgram(id))
+        glGetProgramiv(id, GL_LINK_STATUS, &status);
+
+    if (GL_TRUE == status)
+        return;
+
+    if (glIsShader(id))
+        glGetShaderiv(id, GL_INFO_LOG_LENGTH , &loglen);
+
+    if (glIsProgram(id))
+        glGetProgramiv(id, GL_INFO_LOG_LENGTH , &loglen);
+
+    vector<char> log(loglen, 'E');
+
+    if (glIsShader(id))
+        glGetShaderInfoLog(id, loglen, NULL, &log[0]);
+
+    if (glIsProgram(id))
+        glGetProgramInfoLog( id, loglen, NULL, &log[0]);
+
+    throw logic_error(string(log.begin(), log.end()));
 }
 
-GLuint CreateShader( const GLenum aType, const string aSource )
+GLuint createShader(const GLenum shaderType, const string shaderSource)
 {
-    GLuint shader = glCreateShader( aType );
-    const GLchar* source = (const GLchar*) aSource.c_str();
+    GLuint shader = glCreateShader( shaderType );
+    const GLchar* source = (const GLchar*) shaderSource.c_str();
     glShaderSource( shader, 1, &source, NULL );
     glCompileShader( shader );
-    CheckStatus( shader );
+    checkShaderObjectStatus( shader );
     return shader;
 }
 
-GLuint CreateProgram( const string aVertexShader, const string aFragmentShader )
+GLuint createShaderProgram(const string vertexShaderSource, const string fragmentShaderSource)
 {
-    GLuint vert = CreateShader( GL_VERTEX_SHADER, aVertexShader );
-    GLuint frag = CreateShader( GL_FRAGMENT_SHADER, aFragmentShader );
+    GLuint vert = createShader(GL_VERTEX_SHADER, vertexShaderSource);
+    GLuint frag = createShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
     GLuint program = glCreateProgram();
-    glAttachShader( program, vert );
-    glAttachShader( program, frag );
-    glLinkProgram( program );
-    glDeleteShader( vert );
-    glDeleteShader( frag );
-    CheckStatus( program );
+
+    glAttachShader(program, vert);
+    glAttachShader(program, frag);
+    glLinkProgram(program);
+
+    glDeleteShader(vert);
+    glDeleteShader(frag);
+
+    checkShaderObjectStatus(program);
+
     return program;
 }
 
@@ -99,7 +119,7 @@ void init()
     std::string frag = getFileContent("../data/fragment.glsl");
 
     // load shaders
-    Global::prog = CreateProgram(vert, frag);
+    Global::prog = createShaderProgram(vert, frag);
 
     // create and fill VBO
     glGenBuffers(1, &Global::vbo);
