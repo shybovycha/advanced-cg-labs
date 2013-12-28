@@ -1,184 +1,137 @@
-#include "utils.h"
+#include <GL/glew.h>
+#include <GL/glut.h>
+#include <glm/glm.hpp>
 
-#define printOpenGLError() printOglError(__FILE__, __LINE__)
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <cmath>
+#include <stdexcept>
 
-int printOglError(char *file, int line)
+using namespace std;
+
+std::string getFileContent(char* filename)
 {
-    GLenum glErr;
-    int    retCode = 0;
+    std::ifstream ifile(filename);
+    std::string filetext;
 
-    glErr = glGetError();
-    if (glErr != GL_NO_ERROR)
+    while (ifile.good())
     {
-        printf("glError in file %s @ line %d: %s\n",
-                 file, line, gluErrorString(glErr));
-        retCode = 1;
-    }
-    return retCode;
-}
-
-void printLog(GLuint obj)
-{
-    int infologLength = 0;
-    int maxLength;
-
-    if(glIsShader(obj))
-        glGetShaderiv(obj,GL_INFO_LOG_LENGTH,&maxLength);
-    else
-        glGetProgramiv(obj,GL_INFO_LOG_LENGTH,&maxLength);
-
-    char infoLog[maxLength];
-
-    if (glIsShader(obj))
-        glGetShaderInfoLog(obj, maxLength, &infologLength, infoLog);
-    else
-        glGetProgramInfoLog(obj, maxLength, &infologLength, infoLog);
-
-    if (infologLength > 0)
-        printf("%s\n",infoLog);
-}
-
-char* getShaderSource(char* filename)
-{
-    FILE *f = fopen(filename, "r");
-
-    fseek(f, 0, SEEK_END);
-    int file_size = ftell(f);
-    rewind(f);
-
-    char* data = (char*) malloc(file_size * sizeof(char));
-
-    fread((char*) data, file_size, sizeof(char), f);
-
-    fclose(f);
-
-    return data;
-}
-
-int main()
-{
-    sf::ContextSettings settings;
-    settings.antialiasingLevel = 16;
-    settings.depthBits = 24;
-    settings.stencilBits = 24;
-
-    sf::Window window(sf::VideoMode(800, 600), "moofoo", sf::Style::Close, settings);
-
-    const GLchar* vertexSource = (const GLchar*) getShaderSource("../data/vertex.glsl");
-    const GLchar* fragmentSource = (const GLchar*) getShaderSource("../data/fragment.glsl");
-
-    // Initialize GLEW
-    glewExperimental = GL_TRUE;
-    glewInit();
-
-    // Create and compile the vertex shader
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexSource, NULL);
-    glCompileShader(vertexShader);
-
-    // Create and compile the fragment shader
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
-    glCompileShader(fragmentShader);
-
-    // Link the vertex and fragment shader into a shader program
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glBindFragDataLocation(shaderProgram, 0, "outColor");
-    glLinkProgram(shaderProgram);
-    glUseProgram(shaderProgram);
-
-    GLushort indices[] = { 0, 1, 2 };
-
-    // Create Index Buffer Object
-    GLuint ibo;
-    glGenBuffers(1, &ibo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * sizeof(GLushort), indices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    // Create a Vertex Buffer Object and copy the vertex data to it
-    GLfloat vertices[] = {
-         0.0f,  0.5f, 1.0f, 0.0f, 0.0f,
-         0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f
-    };
-
-    GLuint vbo;
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-    // here, 3 * sizeof(vertex_struct). since vertex_struct is just a set of 5 elements, we get this: 3 * (5 * sizeof(GLfloat))
-    glBufferData(GL_ARRAY_BUFFER, 3 * (5 * sizeof(GLfloat)), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // Create Vertex Array Object
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    // Bind the VBO and setup pointers for the VAO
-    GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-    GLint colAttrib = glGetAttribLocation(shaderProgram, "color");
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
-    glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(posAttrib);
-    glEnableVertexAttribArray(colAttrib);
-
-    // Bind the IBO for the VAO
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-
-    // cleanup
-    glBindVertexArray(0);
-    glDisableVertexAttribArray(posAttrib);
-    glDisableVertexAttribArray(colAttrib);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    printLog(ibo);
-    printLog(vbo);
-    printLog(vao);
-    printOpenGLError();
-
-    while (window.isOpen())
-    {
-        sf::Event windowEvent;
-        while (window.pollEvent(windowEvent))
-        {
-            switch (windowEvent.type)
-            {
-            case sf::Event::Closed:
-                window.close();
-                break;
-            }
-        }
-
-        // Clear the screen to black
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        // Draw command
-        // The first to last vertex is 0 to 3
-        // 3 indices will be used to render a single triangle.
-        // The last parameter is the start address in the IBO => zero
-        glUseProgram(shaderProgram);
-        glBindVertexArray(vao);
-        glDrawRangeElements(GL_TRIANGLES, 0, 3, 3, GL_UNSIGNED_SHORT, NULL);
-
-        // Swap buffers
-        window.display();
+        std::string line;
+        std::getline(ifile, line);
+        filetext.append(line + "\n");
     }
 
-    glDeleteProgram(shaderProgram);
-    glDeleteShader(fragmentShader);
-    glDeleteShader(vertexShader);
+    return filetext;
+}
 
-    glDeleteBuffers(1, &vbo);
+namespace Global
+{
+    std::vector<glm::vec2> points;
+    GLuint vbo, prog;
+};
 
-    glDeleteVertexArrays(1, &vao);
+void CheckStatus( const GLenum id )
+{
+    GLint status = GL_FALSE, loglen = 10;
+    if( glIsShader(id) )    glGetShaderiv( id, GL_COMPILE_STATUS, &status );
+    if( glIsProgram(id) )   glGetProgramiv( id, GL_LINK_STATUS, &status );
+    if( GL_TRUE == status ) return;
+    if( glIsShader(id) )    glGetShaderiv( id, GL_INFO_LOG_LENGTH , &loglen);
+    if( glIsProgram(id) )   glGetProgramiv( id, GL_INFO_LOG_LENGTH , &loglen);
+    vector< char > log( loglen, 'E' );
+    if( glIsShader(id) )    glGetShaderInfoLog( id, loglen, NULL, &log[0] );
+    if( glIsProgram(id) )   glGetProgramInfoLog( id, loglen, NULL, &log[0] );
+    throw logic_error( string( log.begin(), log.end() ) );
+}
+
+GLuint CreateShader( const GLenum aType, const string aSource )
+{
+    GLuint shader = glCreateShader( aType );
+    const GLchar* source = (const GLchar*) aSource.c_str();
+    glShaderSource( shader, 1, &source, NULL );
+    glCompileShader( shader );
+    CheckStatus( shader );
+    return shader;
+}
+
+GLuint CreateProgram( const string aVertexShader, const string aFragmentShader )
+{
+    GLuint vert = CreateShader( GL_VERTEX_SHADER, aVertexShader );
+    GLuint frag = CreateShader( GL_FRAGMENT_SHADER, aFragmentShader );
+    GLuint program = glCreateProgram();
+    glAttachShader( program, vert );
+    glAttachShader( program, frag );
+    glLinkProgram( program );
+    glDeleteShader( vert );
+    glDeleteShader( frag );
+    CheckStatus( program );
+    return program;
+}
+
+void init()
+{
+    GLenum glewError = glewInit();
+
+    if (GLEW_OK != glewError)
+    {
+        throw runtime_error((char*) glewGetErrorString(glewError));
+    }
+
+    printf("GL_VERSION: %s\n", glGetString(GL_VERSION));
+    printf("GL_RENDERER: %s\n", glGetString(GL_RENDERER));
+    printf("GLEW_VERSION: %s\n", glewGetString(GLEW_VERSION));
+    printf("GLSL_VERSION: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+    if (!GLEW_VERSION_2_1)
+    {
+        throw runtime_error("OpenGL 2.1 or better required for GLSL support.");
+    }
+
+    std::string vert = getFileContent("../data/vertex.glsl");
+    std::string frag = getFileContent("../data/fragment.glsl");
+
+    // load shaders
+    Global::prog = CreateProgram(vert, frag);
+
+    // fill vertices
+    Global::points.push_back(glm::vec2(0.2, 0.5));
+    Global::points.push_back(glm::vec2(0.7, 0.5));
+    Global::points.push_back(glm::vec2(0.5, 0.2));
+
+    // create and fill VBO
+    glGenBuffers(1, &Global::vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, Global::vbo);
+    unsigned int numBytes = sizeof(glm::vec2) * Global::points.size();
+    glBufferData(GL_ARRAY_BUFFER, numBytes, &Global::points[0].x, GL_STATIC_DRAW);
+}
+
+void display(void)
+{
+    glClear( GL_COLOR_BUFFER_BIT );
+
+    glUseProgram( Global::prog );
+
+    GLint position_loc = glGetAttribLocation( Global::prog, "position" );
+    glBindBuffer( GL_ARRAY_BUFFER, Global::vbo );
+    glVertexAttribPointer( position_loc, 2, GL_FLOAT, GL_FALSE, sizeof( glm::vec2 ), 0 );
+    glEnableVertexAttribArray( position_loc );
+
+    glDrawArrays( GL_TRIANGLES, 0, Global::points.size() );
+
+    glDisableVertexAttribArray( position_loc );
+
+    glutSwapBuffers();
+}
+
+int main(int argc, char **argv)
+{
+    glutInit( &argc, argv );
+    glutInitWindowSize( 800,600 );
+    glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE );
+    glutCreateWindow( "Sierpinski gasket" );
+    init();
+    glutDisplayFunc( display );
+    glutMainLoop();
+    return 0;
 }
