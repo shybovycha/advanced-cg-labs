@@ -1,6 +1,8 @@
 #include <GL/glew.h>
-#include <GL/glut.h>
-#include <glm/glm.hpp>
+
+#include <SFML/Window.hpp>
+#include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -129,7 +131,7 @@ void init()
     glBufferData(GL_ARRAY_BUFFER, numBytes, &Global::points, GL_STATIC_DRAW);
 }
 
-void display(void)
+void render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -143,18 +145,45 @@ void display(void)
     glDrawArrays(GL_TRIANGLES, 0, Global::points_num);
 
     glDisableVertexAttribArray(position_loc);
-
-    glutSwapBuffers();
 }
 
-int main(int argc, char **argv)
+void handleKeys(sf::Window *window)
 {
-    glutInit( &argc, argv );
-    glutInitWindowSize( 800,600 );
-    glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE );
-    glutCreateWindow( "Sierpinski gasket" );
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+    {
+        window->close();
+    }
+}
+
+int main()
+{
+    sf::ContextSettings settings;
+    settings.antialiasingLevel = 16;
+    settings.depthBits = 24;
+    settings.stencilBits = 24;
+
+    sf::Window window(sf::VideoMode(800, 600), "lab6", sf::Style::Close, settings);
+
     init();
-    glutDisplayFunc( display );
-    glutMainLoop();
+
+    while (window.isOpen())
+    {
+        sf::Event windowEvent;
+
+        while (window.pollEvent(windowEvent))
+        {
+            if (windowEvent.type == sf::Event::Closed)
+            {
+                window.close();
+            }
+        }
+
+        handleKeys(&window);
+
+        render();
+
+        window.display();
+    }
+
     return 0;
 }
