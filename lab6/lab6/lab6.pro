@@ -6,7 +6,7 @@ CONFIG -= qt
 SOURCES += main.cpp \
     utils.cpp
 
-LIBS += -lGL -lGLU -lGLEW -lglut -ljpeg -lsfml-graphics -lsfml-window  -lsfml-system
+LIBS += -lGL -lGLU -lGLEW -lglut -ljpeg -lsfml-graphics -lsfml-window  -lsfml-system -lassimp
 
 OTHER_FILES += \
     vertex.glsl \
