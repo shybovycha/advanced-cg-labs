@@ -27,6 +27,17 @@ Vector Vector::Normalize()
             return *this;
 }
 
+Vector::operator const float*()
+{
+    float* res = new float[3];
+
+    res[0] = x;
+    res[1] = y;
+    res[2] = z;
+
+    return (const float*) res;
+}
+
 double Vector::operator[](unsigned int index) const
 {
     if (index == 0)

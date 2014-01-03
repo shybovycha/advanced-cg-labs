@@ -1,23 +1,19 @@
-#version 330
+varying	vec3 l;
+varying	vec3 h;
+varying	vec3 n;
+varying vec3 v;
 
-layout (std140) uniform Matrices {
+uniform	vec4	lightPos;
+uniform	vec4	eyePos;
 
-    mat4 projMatrix;
-    mat4 viewMatrix;
-    mat4 modelMatrix;
-};
-
-in vec3 position;
-in vec3 normal;
-in vec2 texCoord;
-
-out vec4 vertexPos;
-out vec2 TexCoord;
-out vec3 Normal;
-
-void main()
+void main(void)
 {
-    Normal = normalize(vec3(viewMatrix * modelMatrix * vec4(normal,0.0)));
-    TexCoord = vec2(texCoord);
-    gl_Position = projMatrix * viewMatrix * modelMatrix * vec4(position,1.0);
+    vec3	p = vec3 ( gl_ModelViewMatrix * gl_Vertex );
+    l = normalize ( vec3 ( lightPos ) - p );
+    v = normalize ( vec3 ( eyePos )   - p );
+    h = normalize ( l + v );
+    n = normalize ( gl_NormalMatrix * gl_Normal );
+
+    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+    gl_TexCoord [0] = gl_MultiTexCoord0;
 }

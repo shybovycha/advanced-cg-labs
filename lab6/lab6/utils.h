@@ -48,6 +48,8 @@ class Vector : public sf::Vector3f
 
         void operator/=(double s);
 
+        operator const float*();
+
         Vector operator+(const Vector &v);
 
         Vector operator-(const Vector &v);

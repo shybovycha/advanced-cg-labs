@@ -4,7 +4,8 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 SOURCES += main.cpp \
-    utils.cpp
+    utils.cpp \
+    mesh.cpp
 
 LIBS += -lGL -lGLU -lGLEW -lglut -ljpeg -lsfml-graphics -lsfml-window  -lsfml-system -lassimp
 
@@ -14,4 +15,5 @@ OTHER_FILES += \
     ../data/fragment.glsl
 
 HEADERS += \
-    utils.h
+    utils.h \
+    mesh.h

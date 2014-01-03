@@ -1,39 +1,20 @@
-#version 330
+varying	vec3 l;
+varying	vec3 h;
+varying vec3 v;
+varying vec3 n;
 
-layout (std140) uniform Material {
-    vec4 diffuse;
-    vec4 ambient;
-    vec4 specular;
-    vec4 emissive;
-    float shininess;
-    int texCount;
-};
+uniform sampler2D samp;
 
-uniform sampler2D texUnit;
-
-in vec3 Normal;
-in vec2 TexCoord;
-out vec4 output;
-
-void main()
+void main (void)
 {
-    vec4 color;
-    vec4 amb;
-    float intensity;
-    vec3 lightDir;
-    vec3 n;
+    const vec4	diffColor = vec4 (0.61424, 0.04136, 0.04136, 0.45);
+    const vec4	specColor = vec4 (0.727811, 0.626959, 0.626959, 0.55);
+    const float	specPower = 51.2;
+    vec3	n2   = normalize ( n );
+    vec3	l2   = normalize ( l );
+    vec3	h2   = normalize ( h );
+    vec4	diff = diffColor * max ( dot ( n2, l2 ), 0.0 );
+    vec4	spec = specColor * pow ( max ( dot ( n2, h2 ), 0.0 ), specPower );
 
-    lightDir = normalize(vec3(1.0,1.0,1.0));
-    n = normalize(Normal);
-    intensity = max(dot(lightDir,n),0.0);
-
-    if (texCount == 0) {
-        color = diffuse;
-        amb = ambient;
-    }
-    else {
-        color = texture2D(texUnit, TexCoord);
-        amb = color * 0.33;
-    }
-    output = (color * intensity) + amb;
+    gl_FragColor = texture2D ( samp, gl_TexCoord [0].xy ) +diff + spec;
 }

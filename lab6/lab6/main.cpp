@@ -15,6 +15,24 @@
 #include <stdexcept>
 
 #include "utils.h"
+#include "mesh.h"
+
+namespace Global
+{
+    GLuint vbo, prog;
+
+    Mesh* mesh = 0;
+
+    Vector camPos(0.0, 0.0, -5.0), camXAxis(1.0, 0.0, 0.0);
+    Vector lightPos(0.0, 5.0, -5.0);
+
+    float camRotationSpeed = 0.5f;
+
+    namespace Shader
+    {
+        GLuint light, eye, texture;
+    }
+}
 
 std::string getFileContent(char* filename)
 {
@@ -29,44 +47,6 @@ std::string getFileContent(char* filename)
     }
 
     return filetext;
-}
-
-namespace Global
-{
-    GLuint vbo, prog;
-
-    aiScene* scene = 0;
-    aiMesh* mesh = 0;
-
-    Vector camPos(0.0, 1.0, -150.0), camXAxis(1.0, 0.0, 0.0);
-
-    float camRotationSpeed = 5.0;
-}
-
-void renderSceneNode()
-{
-    glPushMatrix();
-
-    // rendering node itself
-    glBindBuffer(GL_ARRAY_BUFFER, Global::vbo);
-    glDrawArrays(GL_TRIANGLES, 0, Global::mesh->mNumVertices);
-
-    glPopMatrix();
-}
-
-void prepareSceneNode()
-{
-    Global::scene = (aiScene*) aiImportFile("../data/pyro/pyro.3ds", aiProcessPreset_TargetRealtime_MaxQuality);
-
-    Global::mesh = Global::scene->mMeshes[Global::scene->mRootNode->mChildren[0]->mMeshes[0]];
-
-    // create and fill VBO
-    glGenBuffers(1, &Global::vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, Global::vbo);
-
-    // 2 components per vertex * 3 vertices
-    unsigned int numBytes = sizeof(aiVector3D) * Global::mesh->mNumVertices;
-    glBufferData(GL_ARRAY_BUFFER, numBytes, &Global::mesh->mVertices, GL_STATIC_DRAW);
 }
 
 void checkShaderObjectStatus(const GLenum id)
@@ -150,6 +130,13 @@ void init()
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_TEXTURE_2D);
+    glDisable(GL_LIGHTING);
+
+    Global::mesh = new Mesh("../data/phoenix/phoenix_ugv.md2");
+
+    float dist = Global::mesh->getBoundingBox().Length();
+
+    Global::camPos = Vector(0, 0, dist);
 
     std::string vert = getFileContent("../data/vertex.glsl");
     std::string frag = getFileContent("../data/fragment.glsl");
@@ -157,12 +144,14 @@ void init()
     // load shaders
     Global::prog = createShaderProgram(vert, frag);
 
-    // create and fill VBO
-    prepareSceneNode();
+    Global::Shader::light = glGetUniformLocationARB(Global::prog, "lightPos");
+    Global::Shader::eye = glGetUniformLocationARB(Global::prog, "eyePos");
+    Global::Shader::texture = glGetUniformLocationARB(Global::prog, "samp");
 }
 
 void render()
 {
+    glClearColor(0.2, 0.2, 0.2, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     glMatrixMode(GL_MODELVIEW);
@@ -173,15 +162,11 @@ void render()
 
     glUseProgram(Global::prog);
 
-    GLint position_loc = glGetAttribLocation(Global::prog, "position");
+    glUniform4fvARB(Global::Shader::light, 1, (const GLfloat*) Global::lightPos);
+    glUniform4fvARB(Global::Shader::eye, 1, (const GLfloat*) Global::camPos);
+    glUniform1fARB(Global::Shader::texture, 0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, Global::vbo);
-    glVertexAttribPointer(position_loc, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 3, 0);
-    glEnableVertexAttribArray(position_loc);
-
-    renderSceneNode();
-
-    //glDisableVertexAttribArray(position_loc);
+    Global::mesh->render();
 }
 
 void windowResizeHandler(int width, int height)
@@ -190,7 +175,7 @@ void windowResizeHandler(int width, int height)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    gluPerspective(90.0f, (float) width / (float) height, 0.1f, 100.0f);
+    gluPerspective(90.0f, (float) width / (float) height, 0.1f, 1000.0f);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -214,16 +199,12 @@ void handleKeys(sf::Window *window)
     {
         Global::camPos = Global::camPos.Rotate(camUp, Radians(Global::camRotationSpeed));
         Global::camXAxis = Global::camXAxis.Rotate(camUp, Radians(Global::camRotationSpeed));
-
-        printf("%0.3f, %0.3f, %0.3f\n", Global::camPos.x, Global::camPos.y, Global::camPos.z);
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
     {
         Global::camPos = Global::camPos.Rotate(camUp, Radians(-Global::camRotationSpeed));
         Global::camXAxis = Global::camXAxis.Rotate(camUp, Radians(-Global::camRotationSpeed));
-
-        printf("%0.3f, %0.3f, %0.3f\n", Global::camPos.x, Global::camPos.y, Global::camPos.z);
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
